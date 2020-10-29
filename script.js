@@ -19,20 +19,20 @@ const main  = () => {
     })
 
     const canvas = document.querySelector('#c');
-    const renderer = new THREE.WebGLRenderer({canvas});
+    const renderer = new THREE.WebGLRenderer({canvas, antialias: true});
     renderer.autoClear = false;
     const fov = 75;
     const aspect = 2;
     const near = 0.1;
     const far = 5;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    camera.position.z = 0.1;
+    camera.position.z = 2;
     camera.updateProjectionMatrix();
 
     const scene = new THREE.Scene();
 
     const controls = new OrbitControls( camera, renderer.domElement );
-    controls.enableZoom = false;
+    // controls.enableZoom = false;
 
 
     var light = new THREE.DirectionalLight( 0xffffff );
@@ -41,39 +41,41 @@ const main  = () => {
 
     scene.add( new THREE.AmbientLight( 0xffffff, 0.5 ) );
 
-    var video = document.getElementById( 'video' );
-    video.play();
-    video.needsUpdate = true;
-    video.addEventListener('play', function() {
-        this.currentTime = 3;
-    }, false);
+    var outer = document.querySelectorAll( '.outer' );
+    var outerTextures = [];
+    outer.forEach(video => {
+        video.play();
+        video.needsUpdate = true;
+        video.addEventListener('play', function() {
+            this.currentTime = 3;
+        }, false);
+
+        var texture = new THREE.VideoTexture( video );
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.format = THREE.RGBFormat;
+        outerTextures.push(texture);
+    })
 
 
+    const makeInstance = (x) => {
+        const geometry = new THREE.BoxBufferGeometry(x, x, x);  
+        const material = [
+            new THREE.MeshPhongMaterial({ map: outerTextures[0], side: THREE.DoubleSide}),
+            new THREE.MeshPhongMaterial({ map: outerTextures[1], side: THREE.DoubleSide}),
+            new THREE.MeshPhongMaterial({ map: outerTextures[2], side: THREE.DoubleSide}),
+            new THREE.MeshPhongMaterial({ map: outerTextures[3], side: THREE.DoubleSide}),
+            new THREE.MeshPhongMaterial({ map: outerTextures[4], side: THREE.DoubleSide}),
+            new THREE.MeshPhongMaterial({ map: outerTextures[5], side: THREE.DoubleSide})
+        ];
 
-    var texture = new THREE.VideoTexture( video );
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    texture.format = THREE.RGBFormat;
-
-    // add a box
-    const boxWidth = 1;
-    const boxHeight = 1;
-    const boxDepth = 1;
-    const geometry = new THREE.BoxBufferGeometry(boxWidth, boxHeight, boxDepth);
-
-    const makeInstance = (geometry, color, x) => {
-    const material = new THREE.MeshPhongMaterial({color : color, map: texture, side: THREE.DoubleSide});
-
-    const cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
-
-    cube.position.x = x;
-
-    return cube;
+        const cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+        return cube;
     }
 
     const cubes = [
-        makeInstance(geometry, 0xffffff, 0),
+        makeInstance(1),
     ]
 
     const resizeRendererToDisplaySize = renderer => {
